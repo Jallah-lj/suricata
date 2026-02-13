@@ -1,0 +1,21 @@
+01/15/2024-10:23:45.123456  [**] [1:2100498:7] GPL ATTACK_RESPONSE id check returned root [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 192.168.1.105:54321 -> 198.51.100.42:80
+01/15/2024-10:24:12.456789  [**] [1:2024897:4] ET MALWARE Win32/Emotet CnC Activity [**] [Classification: A Network Trojan was detected] [Priority: 1] {TCP} 10.0.0.25:49152 -> 93.184.216.34:443
+01/15/2024-10:25:03.789012  [**] [1:2013028:3] ET WEB_SPECIFIC_APPS SQL Injection Attempt [**] [Classification: Web Application Attack] [Priority: 1] {TCP} 192.168.1.150:55123 -> 203.0.113.50:80
+01/15/2024-10:26:15.234567  [**] [1:2019401:2] ET WEB_SPECIFIC_APPS XSS Attempt [**] [Classification: Web Application Attack] [Priority: 2] {TCP} 172.16.0.50:50234 -> 198.51.100.75:80
+01/15/2024-10:27:30.567890  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.200:51000 -> 10.0.0.0:22
+01/15/2024-10:27:31.234567  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.200:51001 -> 10.0.0.1:22
+01/15/2024-10:27:32.456789  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.200:51002 -> 10.0.0.2:22
+01/15/2024-10:27:33.678901  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.200:51003 -> 10.0.0.3:22
+01/15/2024-10:27:34.890123  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.200:51004 -> 10.0.0.4:22
+01/15/2024-10:28:45.123456  [**] [1:2025655:2] ET INFO TOR Client SSL Certificate [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 192.168.1.75:52341 -> 185.220.101.5:9001
+01/15/2024-10:29:12.789012  [**] [1:2024218:1] ET EXPLOIT Possible ETERNALBLUE MS17-010 Echo Response [**] [Classification: Attempted Administrator Privilege Gain] [Priority: 1] {TCP} 10.0.0.100:53210 -> 192.168.1.254:445
+01/15/2024-10:30:05.345678  [**] [1:2027512:1] ET DNS Query to a *.top domain - Likely Hostile [**] [Classification: Potentially Bad Traffic] [Priority: 2] {UDP} 192.168.1.88:54123 -> 8.8.8.8:53
+01/15/2024-10:30:45.678901  [**] [1:2008581:5] ET MALWARE IRC Bot JOIN command [**] [Classification: A Network Trojan was detected] [Priority: 1] {TCP} 192.168.1.120:48765 -> 198.51.100.99:6667
+01/15/2024-10:31:20.234567  [**] [1:2029336:2] ET POLICY Cryptocurrency Miner Checkin [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 172.16.5.10:49876 -> 104.21.5.123:80
+01/15/2024-10:32:45.567890  [**] [1:2022050:1] ET POLICY Suspicious User-Agent (Nmap Scripting Engine) [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 192.168.1.95:59456 -> 203.0.113.100:80
+01/15/2024-10:33:30.890123  [**] [1:2002910:6] ET POLICY PE EXE or DLL Windows file download HTTP [**] [Classification: Potential Corporate Privacy Violation] [Priority: 1] {TCP} 192.168.1.80:58345 -> 198.51.100.150:80
+01/15/2024-10:34:15.123456  [**] [1:2010935:3] ET TROJAN Suspicious POST with common data encryption [**] [Classification: A Network Trojan was detected] [Priority: 1] {TCP} 192.168.1.110:49999 -> 203.0.113.250:443
+01/15/2024-10:35:00.456789  [**] [1:2019284:5] ET SCAN Behavioral Unusual Port 445 traffic Potential Scan or Infection [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 192.168.1.250:50000 -> 192.168.1.100:445
+01/15/2024-10:36:00.789012  [**] [1:2012648:9] ET POLICY Outbound HTTP Request to *.tk domain - Possible Hostile [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 192.168.1.135:51234 -> 198.51.100.75:80
+01/15/2024-10:37:15.234567  [**] [1:2260002:1] SURICATA Applayer Mismatch protocol both directions [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {TCP} 192.168.1.145:52345 -> 203.0.113.50:8080
+01/15/2024-10:38:30.567890  [**] [1:2210045:2] SURICATA STREAM Packet with invalid timestamp [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {TCP} 10.0.0.50:53456 -> 192.168.1.200:80
