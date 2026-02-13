@@ -1,0 +1,250 @@
+# Custom Rule Templates
+# Use these templates as starting points for your own custom rules
+# Author: Suricata Documentation Project
+# Last Updated: 2024
+
+# ===================================
+# Template 1: Basic HTTP Detection
+# ===================================
+# Description: Detect specific HTTP request patterns
+# Usage: Replace HOST, URI, and METHOD with your values
+
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom HTTP Detection - [DESCRIBE WHAT YOU'RE DETECTING]"; flow:established,to_server; http.method; content:"[METHOD]"; http.host; content:"[HOSTNAME]"; nocase; http.uri; content:"[URI_PATH]"; nocase; classtype:web-application-attack; sid:1900001; rev:1;)
+
+# Example:
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom HTTP - Access to Admin Panel"; flow:established,to_server; http.method; content:"GET"; http.uri; content:"/admin"; nocase; classtype:web-application-attack; sid:1900001; rev:1;)
+
+# ===================================
+# Template 2: Content-Based Detection
+# ===================================
+# Description: Detect specific content in any protocol
+# Usage: Replace CONTENT with your search string
+
+# alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom Content Detection - [DESCRIBE]"; flow:established; content:"[YOUR_CONTENT_HERE]"; nocase; classtype:bad-unknown; sid:1900010; rev:1;)
+
+# Example:
+# alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom - Malicious String Detection"; flow:established; content:"malware_signature"; nocase; classtype:trojan-activity; sid:1900010; rev:1;)
+
+# ===================================
+# Template 3: DNS Query Detection
+# ===================================
+# Description: Detect DNS queries to specific domains
+# Usage: Replace DOMAIN with the domain you want to detect
+
+# alert dns $HOME_NET any -> any 53 (msg:"Custom DNS - Query to [DOMAIN]"; dns.query; content:"[DOMAIN]"; nocase; classtype:bad-unknown; sid:1900020; rev:1;)
+
+# Example:
+# alert dns $HOME_NET any -> any 53 (msg:"Custom DNS - Query to Suspicious Domain"; dns.query; content:"evil.com"; nocase; classtype:trojan-activity; sid:1900020; rev:1;)
+
+# ===================================
+# Template 4: Port-Based Detection
+# ===================================
+# Description: Detect connections to specific ports
+# Usage: Replace PORT with your target port
+
+# alert tcp any any -> $HOME_NET [PORT] (msg:"Custom Port Detection - Connection to Port [PORT]"; flow:to_server,established; classtype:misc-activity; sid:1900030; rev:1;)
+
+# Example:
+# alert tcp any any -> $HOME_NET 4444 (msg:"Custom - Connection to Backdoor Port"; flow:to_server,established; classtype:trojan-activity; sid:1900030; rev:1;)
+
+# ===================================
+# Template 5: TLS/SSL Certificate Detection
+# ===================================
+# Description: Detect TLS certificates with specific attributes
+# Usage: Replace SUBJECT/ISSUER with your search criteria
+
+# alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom TLS - Certificate [ATTRIBUTE]"; tls.subject; content:"[SUBJECT]"; nocase; classtype:bad-unknown; sid:1900040; rev:1;)
+
+# Example:
+# alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom TLS - Suspicious Certificate Subject"; tls.subject; content:"malware"; nocase; classtype:trojan-activity; sid:1900040; rev:1;)
+
+# ===================================
+# Template 6: User-Agent Detection
+# ===================================
+# Description: Detect specific User-Agent strings
+# Usage: Replace USER_AGENT with the string to detect
+
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom User-Agent - [DESCRIBE]"; flow:established,to_server; http.user_agent; content:"[USER_AGENT]"; nocase; classtype:web-application-attack; sid:1900050; rev:1;)
+
+# Example:
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom - Scanning Tool User-Agent"; flow:established,to_server; http.user_agent; content:"Scanner"; nocase; classtype:web-application-attack; sid:1900050; rev:1;)
+
+# ===================================
+# Template 7: Threshold-Based Detection
+# ===================================
+# Description: Detect repeated activity from same source
+# Usage: Adjust count and seconds for your use case
+
+# alert tcp $EXTERNAL_NET any -> $HOME_NET [PORT] (msg:"Custom Threshold - [DESCRIBE ACTIVITY]"; flags:S; threshold:type threshold, track by_src, count [COUNT], seconds [SECONDS]; classtype:attempted-recon; sid:1900060; rev:1;)
+
+# Example:
+# alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Custom - SSH Brute Force Attempt"; flags:S; threshold:type threshold, track by_src, count 10, seconds 60; classtype:attempted-admin; sid:1900060; rev:1;)
+
+# ===================================
+# Template 8: File Type Detection
+# ===================================
+# Description: Detect specific file types being transferred
+# Usage: Replace MAGIC_BYTES with file signature
+
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom File Detection - [FILE_TYPE]"; flow:established,from_server; file_data; content:"[MAGIC_BYTES]"; depth:10; classtype:trojan-activity; sid:1900070; rev:1;)
+
+# Example (PDF):
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom - PDF File Download"; flow:established,from_server; file_data; content:"%PDF"; depth:4; classtype:misc-activity; sid:1900070; rev:1;)
+
+# ===================================
+# Template 9: PCRE Pattern Matching
+# ===================================
+# Description: Use regular expressions for complex patterns
+# Usage: Replace PATTERN with your regex
+
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom PCRE - [DESCRIBE PATTERN]"; flow:established,to_server; http.uri; pcre:"[YOUR_REGEX_PATTERN]"; classtype:web-application-attack; sid:1900080; rev:1;)
+
+# Example (Email pattern):
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom - Email Pattern in URI"; flow:established,to_server; http.uri; pcre:"/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/"; classtype:policy-violation; sid:1900080; rev:1;)
+
+# ===================================
+# Template 10: Flowbits for Stateful Detection
+# ===================================
+# Description: Set and check flags across multiple packets
+# Usage: Use for multi-stage attack detection
+
+# Rule 1: Set the flowbit when condition is met
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom Flowbit - Stage 1 Detected"; flow:established,to_server; content:"[STAGE1_PATTERN]"; flowbits:set,custom.stage1; flowbits:noalert; sid:1900090; rev:1;)
+
+# Rule 2: Alert when flowbit is set and second condition occurs
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom Flowbit - Multi-Stage Attack Detected"; flow:established,to_server; content:"[STAGE2_PATTERN]"; flowbits:isset,custom.stage1; classtype:trojan-activity; sid:1900091; rev:1;)
+
+# Example:
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Login Page Access"; http.uri; content:"/login"; flowbits:set,login.attempt; flowbits:noalert; sid:1900090; rev:1;)
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection After Login"; http.uri; content:"UNION"; nocase; flowbits:isset,login.attempt; classtype:web-application-attack; sid:1900091; rev:1;)
+
+# ===================================
+# Template 11: Bidirectional Traffic Detection
+# ===================================
+# Description: Detect traffic in both directions
+# Usage: Use <> for bidirectional matching
+
+# alert tcp $HOME_NET any <> $EXTERNAL_NET [PORT] (msg:"Custom Bidirectional - [DESCRIBE]"; flow:established; content:"[PATTERN]"; classtype:bad-unknown; sid:1900100; rev:1;)
+
+# Example:
+# alert tcp $HOME_NET any <> $EXTERNAL_NET 4444 (msg:"Custom - Bidirectional Backdoor Traffic"; flow:established; classtype:trojan-activity; sid:1900100; rev:1;)
+
+# ===================================
+# Template 12: HTTP Response Detection
+# ===================================
+# Description: Detect patterns in HTTP responses
+# Usage: Monitor server responses for specific content
+
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom HTTP Response - [DESCRIBE]"; flow:established,from_server; http.stat_code; content:"[STATUS_CODE]"; http.server_body; content:"[RESPONSE_CONTENT]"; classtype:bad-unknown; sid:1900110; rev:1;)
+
+# Example:
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom - Error Message in Response"; flow:established,from_server; http.stat_code; content:"500"; http.server_body; content:"SQL syntax error"; nocase; classtype:web-application-attack; sid:1900110; rev:1;)
+
+# ===================================
+# Template 13: Multiple Content Matches
+# ===================================
+# Description: Require multiple content matches in sequence
+# Usage: Use distance and within for proximity matching
+
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom Multiple Content - [DESCRIBE]"; flow:established,to_server; content:"[CONTENT1]"; nocase; content:"[CONTENT2]"; nocase; distance:0; within:100; classtype:web-application-attack; sid:1900120; rev:1;)
+
+# Example:
+# alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Custom - SQL Injection Pattern"; flow:established,to_server; content:"UNION"; nocase; content:"SELECT"; nocase; distance:0; within:50; classtype:web-application-attack; sid:1900120; rev:1;)
+
+# ===================================
+# Template 14: SSH Protocol Detection
+# ===================================
+# Description: Detect SSH-specific patterns
+# Usage: Monitor SSH traffic for anomalies
+
+# alert ssh $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Custom SSH - [DESCRIBE]"; flow:established,to_server; ssh.software; content:"[SOFTWARE_STRING]"; nocase; classtype:misc-activity; sid:1900130; rev:1;)
+
+# Example:
+# alert ssh $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Custom - Old SSH Version"; flow:established,to_server; ssh.proto; content:"1.5"; classtype:attempted-admin; sid:1900130; rev:1;)
+
+# ===================================
+# Template 15: Custom Classtype and Priority
+# ===================================
+# Description: Define your own classification and priority
+# Usage: Use appropriate classtype for your detection
+
+# Available classtypes:
+# - trojan-activity (priority 1)
+# - attempted-admin (priority 1)
+# - successful-admin (priority 1)
+# - web-application-attack (priority 2)
+# - attempted-recon (priority 2)
+# - misc-activity (priority 3)
+# - policy-violation (priority 3)
+
+# alert tcp any any -> any any (msg:"Custom Classification - [DESCRIBE]"; classtype:[CLASSTYPE]; priority:[1-3]; sid:1900140; rev:1;)
+
+# ===================================
+# SID Range Guidelines
+# ===================================
+# Use these SID ranges for your custom rules:
+# 1,900,000 - 1,999,999: Your custom rules
+# 1,900,000 - 1,909,999: Network-based rules
+# 1,910,000 - 1,919,999: Web application rules
+# 1,920,000 - 1,929,999: Malware/trojan rules
+# 1,930,000 - 1,939,999: Policy violation rules
+# 1,940,000 - 1,949,999: Protocol-specific rules
+# 1,950,000 - 1,959,999: Testing rules (can be disabled in production)
+
+# ===================================
+# Best Practices for Custom Rules
+# ===================================
+# 1. Always test rules in a safe environment first
+# 2. Use descriptive msg fields
+# 3. Include classtype and priority
+# 4. Document your rules with comments
+# 5. Use unique SIDs starting at 1,900,000
+# 6. Increment rev when updating rules
+# 7. Use flow keywords for TCP connections
+# 8. Optimize content matches (most unique first)
+# 9. Use thresholds to reduce false positives
+# 10. Include references when applicable
+
+# ===================================
+# Testing Your Custom Rules
+# ===================================
+# Test rule syntax:
+# $ sudo suricata -T -c /etc/suricata/suricata.yaml
+
+# Test with PCAP:
+# $ sudo suricata -c /etc/suricata/suricata.yaml -r test.pcap -l /tmp/
+
+# Monitor live:
+# $ sudo tail -f /var/log/suricata/fast.log
+
+# ===================================
+# Example: Complete Custom Rule
+# ===================================
+# Comprehensive example with all best practices:
+
+# Rule: Detect access to company database from external network
+# Purpose: Alert on unauthorized database access attempts
+# Author: Security Team
+# Date: 2024-01-15
+# Tested: Yes, against test traffic
+# False Positives: VPN users may trigger (add to whitelist if needed)
+# alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (
+#     msg:"Custom Alert - External MySQL Connection Attempt";
+#     flow:to_server,established;
+#     flags:S;
+#     threshold:type limit, track by_src, count 1, seconds 300;
+#     classtype:attempted-admin;
+#     reference:url,dev.mysql.com/doc/refman/8.0/en/security.html;
+#     priority:1;
+#     sid:1900150;
+#     rev:2;
+# )
+
+# ===================================
+# Notes:
+# - All templates are commented out by default
+# - Uncomment and modify templates for your use
+# - Always use unique SID values
+# - Test thoroughly before deploying to production
+# - Document your rules for future reference
+# ===================================
