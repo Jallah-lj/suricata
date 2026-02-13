@@ -31,7 +31,7 @@ Usage Examples:
     ./analyze-logs.py --file eve.json --top 10 --filter priority:1 --export high_priority.csv
 
 Requirements:
-    Python 3.6+
+    Python 3.7+
     No external dependencies (uses standard library only)
 """
 

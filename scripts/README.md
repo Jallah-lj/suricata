@@ -85,7 +85,7 @@ A Python script for analyzing Suricata's eve.json log files.
 - `signature:TEXT` - Alerts matching signature text
 
 **Requirements:**
-- Python 3.6+
+- Python 3.7+
 - No external dependencies (uses standard library only)
 
 ---
