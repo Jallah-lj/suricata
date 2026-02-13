@@ -1,0 +1,203 @@
+# Web Application Attack Detection Rules
+# These rules detect common web attacks and vulnerabilities
+# Author: Suricata Documentation Project
+# Last Updated: 2024
+
+# ===================================
+# SQL Injection Detection
+# ===================================
+
+# SQL Injection - UNION SELECT
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - UNION SELECT Detected"; flow:established,to_server; content:"UNION"; nocase; content:"SELECT"; nocase; distance:0; classtype:web-application-attack; reference:url,owasp.org/www-community/attacks/SQL_Injection; sid:1000100; rev:1; priority:1;)
+
+# SQL Injection - OR 1=1
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - OR 1=1 Pattern"; flow:established,to_server; pcre:"/(\%27)|(\')|(--)|(\%23)|(#)/i"; pcre:"/((\%27)|(\'))union/i"; classtype:web-application-attack; sid:1000101; rev:1; priority:1;)
+
+# SQL Injection - Comment Sequence
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - SQL Comment Detected"; flow:established,to_server; http.uri; pcre:"/((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i"; classtype:web-application-attack; sid:1000102; rev:1; priority:1;)
+
+# SQL Injection - Time-based Blind
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - Time-Based Blind SQLi"; flow:established,to_server; content:"sleep"; nocase; pcre:"/sleep\s*\(/i"; classtype:web-application-attack; sid:1000103; rev:1; priority:1;)
+
+# SQL Injection - MySQL Functions
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - MySQL Function Detected"; flow:established,to_server; content:"concat"; nocase; pcre:"/concat\s*\(/i"; classtype:web-application-attack; sid:1000104; rev:1; priority:1;)
+
+# SQL Injection - Boolean-based
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - Boolean-Based SQLi"; flow:established,to_server; pcre:"/(and|or)\s+\d+\s*=\s*\d+/i"; classtype:web-application-attack; sid:1000105; rev:1; priority:1;)
+
+# SQL Injection - Information Schema
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - Information_Schema Access"; flow:established,to_server; content:"information_schema"; nocase; classtype:web-application-attack; sid:1000106; rev:1; priority:1;)
+
+# SQL Injection - WAITFOR DELAY (MSSQL)
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SQL Injection - WAITFOR DELAY (MSSQL)"; flow:established,to_server; content:"waitfor"; nocase; content:"delay"; nocase; distance:0; classtype:web-application-attack; sid:1000107; rev:1; priority:1;)
+
+# ===================================
+# Cross-Site Scripting (XSS)
+# ===================================
+
+# XSS - Script Tag
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - Script Tag Detected"; flow:established,to_server; content:"<script"; nocase; fast_pattern; pcre:"/<script[^>]*>.*?<\/script>/i"; classtype:web-application-attack; reference:url,owasp.org/www-community/attacks/xss; sid:1000110; rev:1; priority:1;)
+
+# XSS - JavaScript Event Handler
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - JavaScript Event Handler"; flow:established,to_server; pcre:"/(on\w+\s*=)/i"; classtype:web-application-attack; sid:1000111; rev:1; priority:1;)
+
+# XSS - JavaScript Protocol
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - Javascript Protocol"; flow:established,to_server; content:"javascript:"; nocase; classtype:web-application-attack; sid:1000112; rev:1; priority:1;)
+
+# XSS - IMG Tag with Event
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - IMG Tag with onerror"; flow:established,to_server; content:"<img"; nocase; content:"onerror"; nocase; distance:0; classtype:web-application-attack; sid:1000113; rev:1; priority:1;)
+
+# XSS - Data URI Scheme
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - Data URI Scheme"; flow:established,to_server; content:"data:text/html"; nocase; classtype:web-application-attack; sid:1000114; rev:1; priority:1;)
+
+# XSS - Encoded Script Tag
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - Encoded Script Tag"; flow:established,to_server; pcre:"/(%3C|<)(%73|s)(%63|c)(%72|r)(%69|i)(%70|p)(%74|t)/i"; classtype:web-application-attack; sid:1000115; rev:1; priority:1;)
+
+# XSS - Alert Function
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - Alert Function"; flow:established,to_server; content:"alert"; nocase; pcre:"/alert\s*\(/i"; classtype:web-application-attack; sid:1000116; rev:1; priority:1;)
+
+# XSS - Document Cookie Access
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XSS Attack - Document.cookie Access"; flow:established,to_server; content:"document.cookie"; nocase; classtype:web-application-attack; sid:1000117; rev:1; priority:1;)
+
+# ===================================
+# Directory Traversal Attacks
+# ===================================
+
+# Directory Traversal - Unix Path
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Directory Traversal - Unix Path (../)"; flow:established,to_server; http.uri; content:"../"; fast_pattern; classtype:web-application-attack; reference:url,owasp.org/www-community/attacks/Path_Traversal; sid:1000120; rev:1; priority:2;)
+
+# Directory Traversal - Windows Path
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Directory Traversal - Windows Path (..\)"; flow:established,to_server; http.uri; content:"..\"; classtype:web-application-attack; sid:1000121; rev:1; priority:2;)
+
+# Directory Traversal - URL Encoded
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Directory Traversal - URL Encoded (..%2f)"; flow:established,to_server; http.uri; pcre:"/\.\.(%2f|%5c)/i"; classtype:web-application-attack; sid:1000122; rev:1; priority:2;)
+
+# Directory Traversal - Double URL Encoded
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Directory Traversal - Double URL Encoded"; flow:established,to_server; http.uri; pcre:"/\.\.(%252f|%255c)/i"; classtype:web-application-attack; sid:1000123; rev:1; priority:2;)
+
+# Directory Traversal - Absolute Path Access
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Directory Traversal - /etc/passwd Access"; flow:established,to_server; http.uri; content:"/etc/passwd"; nocase; classtype:web-application-attack; sid:1000124; rev:1; priority:1;)
+
+# Directory Traversal - Windows System Files
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Directory Traversal - Windows System File Access"; flow:established,to_server; http.uri; content:"windows"; nocase; content:"system32"; nocase; distance:0; classtype:web-application-attack; sid:1000125; rev:1; priority:1;)
+
+# ===================================
+# Common Web Shells
+# ===================================
+
+# Web Shell - PHP Shell Detection
+alert http any any -> $HOME_NET any (msg:"Web Shell - PHP Shell Detected"; flow:established; content:"<?php"; content:"system"; distance:0; content:"$_"; distance:0; classtype:web-application-attack; sid:1000130; rev:1; priority:1;)
+
+# Web Shell - WSO Shell
+alert http any any -> $HOME_NET any (msg:"Web Shell - WSO Shell Detected"; flow:established; content:"WSOsetcookie"; classtype:web-application-attack; reference:url,github.com/tennc/webshell; sid:1000131; rev:1; priority:1;)
+
+# Web Shell - C99 Shell
+alert http any any -> $HOME_NET any (msg:"Web Shell - C99 Shell Detected"; flow:established; content:"c99shell"; nocase; classtype:web-application-attack; sid:1000132; rev:1; priority:1;)
+
+# Web Shell - China Chopper
+alert http any any -> $HOME_NET any (msg:"Web Shell - China Chopper Pattern"; flow:established; content:"eval"; nocase; content:"base64_decode"; nocase; distance:0; classtype:web-application-attack; sid:1000133; rev:1; priority:1;)
+
+# Web Shell - ASP Shell
+alert http any any -> $HOME_NET any (msg:"Web Shell - ASP Shell Detected"; flow:established; content:"<%"; content:"execute"; nocase; distance:0; content:"request"; nocase; distance:0; classtype:web-application-attack; sid:1000134; rev:1; priority:1;)
+
+# Web Shell - JSP Shell
+alert http any any -> $HOME_NET any (msg:"Web Shell - JSP Shell Detected"; flow:established; content:"<%"; content:"Runtime.getRuntime()"; nocase; distance:0; classtype:web-application-attack; sid:1000135; rev:1; priority:1;)
+
+# ===================================
+# Suspicious User-Agent Strings
+# ===================================
+
+# SQL Injection Tool - sqlmap
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - sqlmap Tool"; flow:established,to_server; http.user_agent; content:"sqlmap"; nocase; classtype:web-application-attack; sid:1000140; rev:1; priority:2;)
+
+# Vulnerability Scanner - Nikto
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - Nikto Scanner"; flow:established,to_server; http.user_agent; content:"Nikto"; nocase; classtype:web-application-attack; sid:1000141; rev:1; priority:2;)
+
+# Vulnerability Scanner - Nmap NSE
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - Nmap NSE"; flow:established,to_server; http.user_agent; content:"Nmap"; nocase; classtype:web-application-attack; sid:1000142; rev:1; priority:2;)
+
+# Web Scanner - Burp Suite
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - Burp Suite"; flow:established,to_server; http.user_agent; content:"Burp"; nocase; classtype:web-application-attack; sid:1000143; rev:1; priority:2;)
+
+# Web Scanner - OWASP ZAP
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - OWASP ZAP"; flow:established,to_server; http.user_agent; content:"OWASP ZAP"; nocase; classtype:web-application-attack; sid:1000144; rev:1; priority:2;)
+
+# Web Scanner - Acunetix
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - Acunetix Scanner"; flow:established,to_server; http.user_agent; content:"Acunetix"; nocase; classtype:web-application-attack; sid:1000145; rev:1; priority:2;)
+
+# Exploit Tool - Metasploit
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - Metasploit"; flow:established,to_server; http.user_agent; content:"Metasploit"; nocase; classtype:web-application-attack; sid:1000146; rev:1; priority:1;)
+
+# Web Fuzzer - wfuzz
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - wfuzz"; flow:established,to_server; http.user_agent; content:"Wfuzz"; nocase; classtype:web-application-attack; sid:1000147; rev:1; priority:2;)
+
+# Generic Scanner Pattern
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious User-Agent - Generic Scanner"; flow:established,to_server; http.user_agent; pcre:"/(scanner|exploit|audit|probe|crawler)/i"; classtype:web-application-attack; sid:1000148; rev:1; priority:2;)
+
+# Empty or Missing User-Agent
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious - Empty User-Agent"; flow:established,to_server; http.user_agent; content:"||"; classtype:web-application-attack; sid:1000149; rev:1; priority:3;)
+
+# ===================================
+# Command Injection
+# ===================================
+
+# Command Injection - Pipe Character
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Command Injection - Pipe Character"; flow:established,to_server; http.uri; pcre:"/[|;`$()]/"; classtype:web-application-attack; sid:1000150; rev:1; priority:1;)
+
+# Command Injection - Semicolon Separator
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Command Injection - Semicolon Separator"; flow:established,to_server; content:";"; http.uri; content:"cat"; nocase; distance:0; classtype:web-application-attack; sid:1000151; rev:1; priority:1;)
+
+# Command Injection - Command Substitution
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Command Injection - Command Substitution"; flow:established,to_server; pcre:"/\$\(.*\)/"; classtype:web-application-attack; sid:1000152; rev:1; priority:1;)
+
+# ===================================
+# Local File Inclusion (LFI)
+# ===================================
+
+# LFI - File Parameter with Traversal
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"LFI Attack - File Parameter with Traversal"; flow:established,to_server; http.uri; content:"file="; content:"../"; distance:0; classtype:web-application-attack; sid:1000160; rev:1; priority:1;)
+
+# LFI - PHP Wrappers
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"LFI Attack - PHP Wrapper (php://filter)"; flow:established,to_server; http.uri; content:"php://filter"; nocase; classtype:web-application-attack; sid:1000161; rev:1; priority:1;)
+
+# LFI - PHP Input Wrapper
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"LFI Attack - PHP Input Wrapper"; flow:established,to_server; http.uri; content:"php://input"; nocase; classtype:web-application-attack; sid:1000162; rev:1; priority:1;)
+
+# ===================================
+# Remote File Inclusion (RFI)
+# ===================================
+
+# RFI - HTTP/HTTPS URL in Parameter
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"RFI Attack - HTTP URL in Parameter"; flow:established,to_server; http.uri; pcre:"/(\?|&)[^=]+=https?:\/\//i"; classtype:web-application-attack; sid:1000170; rev:1; priority:1;)
+
+# RFI - FTP URL in Parameter
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"RFI Attack - FTP URL in Parameter"; flow:established,to_server; http.uri; content:"ftp://"; nocase; classtype:web-application-attack; sid:1000171; rev:1; priority:1;)
+
+# ===================================
+# XML External Entity (XXE) Injection
+# ===================================
+
+# XXE - External Entity Declaration
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XXE Attack - External Entity Declaration"; flow:established,to_server; content:"<!ENTITY"; nocase; content:"SYSTEM"; nocase; distance:0; classtype:web-application-attack; sid:1000180; rev:1; priority:1;)
+
+# XXE - DOCTYPE Declaration with SYSTEM
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"XXE Attack - DOCTYPE with SYSTEM"; flow:established,to_server; content:"<!DOCTYPE"; nocase; content:"SYSTEM"; nocase; distance:0; classtype:web-application-attack; sid:1000181; rev:1; priority:1;)
+
+# ===================================
+# Server-Side Request Forgery (SSRF)
+# ===================================
+
+# SSRF - Localhost Access
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SSRF Attack - Localhost Access Attempt"; flow:established,to_server; http.uri; pcre:"/(localhost|127\.0\.0\.1|0\.0\.0\.0)/i"; classtype:web-application-attack; sid:1000190; rev:1; priority:1;)
+
+# SSRF - Internal IP Address
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"SSRF Attack - Internal IP Address"; flow:established,to_server; http.uri; pcre:"/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/"; classtype:web-application-attack; sid:1000191; rev:1; priority:1;)
+
+# ===================================
+# Notes:
+# - These rules detect common web application attacks
+# - Tune thresholds based on your environment to reduce false positives
+# - Some rules may need adjustment for your specific web applications
+# - Consider using these as starting points for more specific rules
+# - Regular expression rules (pcre) may impact performance
+# ===================================

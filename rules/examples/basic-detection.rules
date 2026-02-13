@@ -1,0 +1,144 @@
+# Basic Detection Rules
+# These rules demonstrate basic detection capabilities for common protocols
+# Author: Suricata Documentation Project
+# Last Updated: 2024
+
+# ===================================
+# ICMP Detection Rules
+# ===================================
+
+# Detect any ICMP ping (echo request)
+alert icmp any any -> $HOME_NET any (msg:"ICMP Ping Detected"; itype:8; sid:1000001; rev:1; classtype:misc-activity;)
+
+# Detect ICMP ping response (echo reply)
+alert icmp any any -> $HOME_NET any (msg:"ICMP Ping Reply Detected"; itype:0; sid:1000002; rev:1; classtype:misc-activity;)
+
+# Detect ICMP destination unreachable
+alert icmp any any -> $HOME_NET any (msg:"ICMP Destination Unreachable"; itype:3; sid:1000003; rev:1; classtype:misc-activity;)
+
+# Detect ICMP redirect
+alert icmp any any -> $HOME_NET any (msg:"ICMP Redirect Detected"; itype:5; sid:1000004; rev:1; classtype:bad-unknown;)
+
+# Detect ICMP time exceeded
+alert icmp any any -> $HOME_NET any (msg:"ICMP Time Exceeded"; itype:11; sid:1000005; rev:1; classtype:misc-activity;)
+
+# ===================================
+# TCP Connection Detection
+# ===================================
+
+# Detect TCP SYN packets (connection attempts)
+alert tcp any any -> $HOME_NET any (msg:"TCP SYN Connection Attempt"; flags:S,12; threshold:type limit, track by_src, count 1, seconds 60; sid:1000010; rev:1; classtype:misc-activity;)
+
+# Detect TCP connections to common services
+alert tcp any any -> $HOME_NET 22 (msg:"SSH Connection Attempt"; flags:S; threshold:type limit, track by_src, count 1, seconds 60; sid:1000011; rev:1; classtype:misc-activity;)
+
+alert tcp any any -> $HOME_NET 23 (msg:"Telnet Connection Attempt"; flags:S; sid:1000012; rev:1; classtype:policy-violation;)
+
+alert tcp any any -> $HOME_NET 3389 (msg:"RDP Connection Attempt"; flags:S; threshold:type limit, track by_src, count 1, seconds 60; sid:1000013; rev:1; classtype:misc-activity;)
+
+alert tcp any any -> $HOME_NET 445 (msg:"SMB Connection Attempt"; flags:S; threshold:type limit, track by_src, count 1, seconds 60; sid:1000014; rev:1; classtype:misc-activity;)
+
+# Detect TCP RST (connection reset)
+alert tcp any any -> $HOME_NET any (msg:"TCP Connection Reset"; flags:R; threshold:type threshold, track by_src, count 10, seconds 10; sid:1000015; rev:1; classtype:misc-activity;)
+
+# Detect TCP FIN scan
+alert tcp any any -> $HOME_NET any (msg:"TCP FIN Scan Detected"; flags:F,12; threshold:type threshold, track by_src, count 5, seconds 60; sid:1000016; rev:1; classtype:attempted-recon;)
+
+# Detect NULL scan (no flags set)
+alert tcp any any -> $HOME_NET any (msg:"TCP NULL Scan Detected"; flags:0; threshold:type threshold, track by_src, count 5, seconds 60; sid:1000017; rev:1; classtype:attempted-recon;)
+
+# Detect XMAS scan (FIN, PSH, URG flags)
+alert tcp any any -> $HOME_NET any (msg:"TCP XMAS Scan Detected"; flags:FPU,12; threshold:type threshold, track by_src, count 5, seconds 60; sid:1000018; rev:1; classtype:attempted-recon;)
+
+# ===================================
+# UDP Traffic Detection
+# ===================================
+
+# Detect UDP traffic to DNS port
+alert udp any any -> $HOME_NET 53 (msg:"DNS Query Detected"; threshold:type limit, track by_src, count 1, seconds 60; sid:1000020; rev:1; classtype:misc-activity;)
+
+# Detect UDP traffic to NTP port
+alert udp any any -> $HOME_NET 123 (msg:"NTP Request Detected"; threshold:type limit, track by_src, count 1, seconds 300; sid:1000021; rev:1; classtype:misc-activity;)
+
+# Detect UDP traffic to SNMP port
+alert udp any any -> $HOME_NET 161 (msg:"SNMP Request Detected"; sid:1000022; rev:1; classtype:misc-activity;)
+
+# Detect UDP traffic to TFTP port
+alert udp any any -> $HOME_NET 69 (msg:"TFTP Connection Attempt"; sid:1000023; rev:1; classtype:misc-activity;)
+
+# Detect NetBIOS name service
+alert udp any any -> $HOME_NET 137 (msg:"NetBIOS Name Service Query"; threshold:type limit, track by_src, count 1, seconds 60; sid:1000024; rev:1; classtype:misc-activity;)
+
+# ===================================
+# Basic Port Scan Detection
+# ===================================
+
+# Detect connections to multiple ports from same source (horizontal scan)
+alert tcp any any -> $HOME_NET any (msg:"Possible Port Scan - Multiple Ports"; flags:S; threshold:type threshold, track by_src, count 10, seconds 10; sid:1000030; rev:1; classtype:attempted-recon; priority:2;)
+
+# Detect connections to same port from multiple sources (vertical scan)
+alert tcp any any -> $HOME_NET 80 (msg:"Possible Port Scan - Same Port Multiple Sources"; flags:S; threshold:type threshold, track by_dst, count 10, seconds 10; sid:1000031; rev:1; classtype:attempted-recon;)
+
+# Detect rapid SYN packets
+alert tcp any any -> $HOME_NET any (msg:"Rapid SYN Flood Detected"; flags:S; threshold:type threshold, track by_dst, count 20, seconds 5; sid:1000032; rev:1; classtype:attempted-dos; priority:1;)
+
+# Detect scanning of high ports
+alert tcp any any -> $HOME_NET 1024:65535 (msg:"High Port Scan Detected"; flags:S; threshold:type threshold, track by_src, count 20, seconds 60; sid:1000033; rev:1; classtype:attempted-recon;)
+
+# Detect stealth scan (various flag combinations)
+alert tcp any any -> $HOME_NET any (msg:"Stealth Scan - SYN-FIN"; flags:SF,12; sid:1000034; rev:1; classtype:attempted-recon; priority:2;)
+
+# ===================================
+# FTP Detection
+# ===================================
+
+# Detect FTP connections
+alert tcp any any -> $HOME_NET 21 (msg:"FTP Connection Attempt"; flow:to_server,established; content:"USER"; depth:4; sid:1000040; rev:1; classtype:misc-activity;)
+
+# Detect FTP login
+alert tcp any any -> $HOME_NET 21 (msg:"FTP Login Attempt"; flow:to_server,established; content:"PASS"; depth:4; sid:1000041; rev:1; classtype:misc-activity;)
+
+# Detect anonymous FTP login
+alert tcp any any -> $HOME_NET 21 (msg:"Anonymous FTP Login Attempt"; flow:to_server,established; content:"USER anonymous"; nocase; sid:1000042; rev:1; classtype:policy-violation;)
+
+# ===================================
+# HTTP Detection (Basic)
+# ===================================
+
+# Detect HTTP GET requests
+alert http any any -> $HOME_NET any (msg:"HTTP GET Request"; flow:to_server,established; http.method; content:"GET"; threshold:type limit, track by_src, count 1, seconds 60; sid:1000050; rev:1; classtype:misc-activity;)
+
+# Detect HTTP POST requests
+alert http any any -> $HOME_NET any (msg:"HTTP POST Request"; flow:to_server,established; http.method; content:"POST"; threshold:type limit, track by_src, count 1, seconds 60; sid:1000051; rev:1; classtype:misc-activity;)
+
+# Detect HTTP to non-standard ports
+alert http any any -> $HOME_NET !$HTTP_PORTS (msg:"HTTP Traffic on Non-Standard Port"; sid:1000052; rev:1; classtype:policy-violation;)
+
+# ===================================
+# DNS Detection (Basic)
+# ===================================
+
+# Detect DNS queries
+alert dns any any -> any any (msg:"DNS Query Detected"; dns.query; threshold:type limit, track by_src, count 1, seconds 60; sid:1000060; rev:1; classtype:misc-activity;)
+
+# Detect DNS query for localhost
+alert dns any any -> any any (msg:"DNS Query for Localhost"; dns.query; content:"localhost"; nocase; sid:1000061; rev:1; classtype:misc-activity;)
+
+# ===================================
+# TLS/SSL Detection (Basic)
+# ===================================
+
+# Detect TLS handshake
+alert tls any any -> $HOME_NET any (msg:"TLS Connection Detected"; flow:to_server,established; threshold:type limit, track by_src, count 1, seconds 60; sid:1000070; rev:1; classtype:misc-activity;)
+
+# Detect expired TLS certificate
+alert tls any any -> $HOME_NET any (msg:"Expired TLS Certificate"; tls.cert_expired; sid:1000071; rev:1; classtype:bad-unknown; priority:2;)
+
+# ===================================
+# Notes:
+# - These rules are for DEMONSTRATION purposes
+# - Adjust thresholds based on your environment
+# - Many of these rules will generate alerts in normal network traffic
+# - Use them as learning examples or templates for more specific rules
+# - In production, you would typically disable or tune these generic rules
+# ===================================
