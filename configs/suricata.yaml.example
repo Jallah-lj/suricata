@@ -1,0 +1,466 @@
+# Suricata Configuration File - Example
+# This is a comprehensive example configuration for Suricata IDS/IPS
+# Copy this file to suricata.yaml and modify according to your needs
+
+%YAML 1.1
+---
+
+# ====================================================================
+# VARIABLES - Define your network segments
+# ====================================================================
+# These variables are used throughout the ruleset to define what 
+# networks to protect and what to consider external
+
+vars:
+  # Define your HOME_NET - the networks you want to protect
+  # IMPORTANT: Modify this to match your actual network!
+  # Examples:
+  #   Single network: "192.168.1.0/24"
+  #   Multiple networks: "[192.168.1.0/24,10.0.0.0/8]"
+  #   Any: "any"
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    
+    # Define external networks (typically everything not HOME_NET)
+    EXTERNAL_NET: "!$HOME_NET"
+    
+    # Common server addresses - customize for your environment
+    HTTP_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+    AIM_SERVERS: "$EXTERNAL_NET"
+    DC_SERVERS: "$HOME_NET"
+    DNP3_SERVER: "$HOME_NET"
+    DNP3_CLIENT: "$HOME_NET"
+    MODBUS_CLIENT: "$HOME_NET"
+    MODBUS_SERVER: "$HOME_NET"
+    ENIP_CLIENT: "$HOME_NET"
+    ENIP_SERVER: "$HOME_NET"
+
+  port-groups:
+    HTTP_PORTS: "80"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: "1521"
+    SSH_PORTS: "22"
+    DNP3_PORTS: "20000"
+    MODBUS_PORTS: "502"
+    FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
+    FTP_PORTS: "21"
+    GENEVE_PORTS: "6081"
+    VXLAN_PORTS: "4789"
+    TEREDO_PORTS: "3544"
+
+# ====================================================================
+# DEFAULT RULE PATH - Where rules are stored
+# ====================================================================
+default-rule-path: /etc/suricata/rules
+
+# Rule files to load - MODIFY THIS based on your needs
+rule-files:
+  - suricata.rules
+  # - local.rules
+  # - emerging-threats.rules
+  # - custom-rules.rules
+
+# Classification and reference config files
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+
+# ====================================================================
+# LOGGING - Configure output for alerts and events
+# ====================================================================
+outputs:
+  # Fast log - Simple text alert log (one line per alert)
+  # RECOMMENDED for quick alert review
+  - fast:
+      enabled: yes
+      filename: fast.log
+      append: yes
+
+  # EVE JSON log - Structured logging in JSON format
+  # RECOMMENDED for log analysis and SIEM integration
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      
+      # Rotate logs when they reach this size
+      rotate-interval: 1h
+      
+      # Types of events to log
+      types:
+        - alert:
+            # Include payload in base64
+            payload: yes
+            payload-buffer-size: 4kb
+            payload-printable: yes
+            # Include decoded packets
+            packet: yes
+            # Include HTTP metadata
+            metadata: yes
+            # Tag flow with alerts
+            tagged-packets: yes
+            
+        - anomaly:
+            enabled: yes
+            
+        - http:
+            enabled: yes
+            extended: yes
+            
+        - dns:
+            enabled: yes
+            # Query and answer logging
+            query: yes
+            answer: yes
+            
+        - tls:
+            enabled: yes
+            extended: yes
+            # Include session resumption
+            session-resumption: yes
+            
+        - files:
+            enabled: yes
+            force-magic: no
+            
+        - drop:
+            enabled: yes
+            
+        - smtp:
+            enabled: yes
+            extended: yes
+            
+        - ssh:
+            enabled: yes
+            
+        - flow:
+            enabled: yes
+            
+        - stats:
+            enabled: yes
+            totals: yes
+            threads: yes
+            
+        - dhcp:
+            enabled: yes
+            extended: yes
+
+  # Unified2 output - For integration with Barnyard2/Snorby
+  - unified2-alert:
+      enabled: no
+      filename: unified2.alert
+      limit: 32mb
+
+  # Standard log output
+  - stats:
+      enabled: yes
+      filename: stats.log
+      append: yes
+      totals: yes
+      threads: yes
+      interval: 8
+
+# ====================================================================
+# INTERFACE CONFIGURATION - Network capture settings
+# ====================================================================
+# Choose ONE of the following interface configurations based on your setup
+
+# AF_PACKET - Recommended for Linux with kernel 3.0+
+# High performance packet capture using AF_PACKET
+af-packet:
+  - interface: eth0
+    # Number of threads for this interface
+    threads: auto
+    # Cluster type for load balancing
+    cluster-type: cluster_flow
+    cluster-id: 99
+    # Defragmentation
+    defrag: yes
+    # Use mmap for zero-copy
+    use-mmap: yes
+    # Ring buffer size
+    ring-size: 2048
+    # Block size
+    block-size: 32768
+
+# PCAP - Standard libpcap capture (fallback option)
+pcap:
+  - interface: eth0
+    # Number of threads
+    threads: auto
+    # Use promiscuous mode
+    promisc: yes
+    # Snaplen - max bytes per packet
+    snaplen: 1518
+
+# PCAP file reading - For offline analysis
+# pcap-file:
+#   checksum-checks: auto
+
+# ====================================================================
+# DETECTION ENGINE - Core IDS/IPS settings
+# ====================================================================
+detect:
+  # Profile for detection engine
+  # Options: low, medium, high, custom
+  profile: medium
+  
+  # Custom profile settings (if profile: custom)
+  custom-values:
+    toclient-groups: 3
+    toserver-groups: 25
+  
+  # SGH mpm context
+  sgh-mpm-context: auto
+  
+  # Inspection recursion limit
+  inspection-recursion-limit: 3000
+
+# ====================================================================
+# PACKET PROCESSING - Threading and performance
+# ====================================================================
+threading:
+  # Set number of threads. Default is 'auto' which uses CPU count
+  set-cpu-affinity: no
+  
+  # Thread management
+  cpu-affinity:
+    - management-cpu-set:
+        cpu: [ 0 ]
+    - receive-cpu-set:
+        cpu: [ 0 ]
+    - worker-cpu-set:
+        cpu: [ "all" ]
+        mode: "exclusive"
+        prio:
+          low: [ 0 ]
+          medium: [ "1-2" ]
+          high: [ 3 ]
+          default: "medium"
+
+  # Runmode: workers, autofp
+  # workers: one thread handles all packet processing
+  # autofp: automatic flow pinning for better performance
+  runmode: autofp
+
+# ====================================================================
+# STREAM ENGINE - TCP session handling
+# ====================================================================
+stream:
+  # Maximum tracked sessions
+  memcap: 64mb
+  
+  # Prealloc sessions for better performance
+  prealloc-sessions: 32k
+  
+  # Checksum validation
+  checksum-validation: yes
+  
+  # Inline mode (IPS) settings
+  inline: auto
+  
+  # Bypass after this many packets if no match
+  bypass: no
+  
+  # Session reassembly settings
+  reassembly:
+    memcap: 256mb
+    depth: 1mb
+    toserver-chunk-size: 2560
+    toclient-chunk-size: 2560
+    randomize-chunk-size: yes
+
+# ====================================================================
+# HOST CONFIGURATION - Per-host and OS-specific settings
+# ====================================================================
+host:
+  hash-size: 4096
+  prealloc: 1000
+  memcap: 32mb
+
+# ====================================================================
+# PROTOCOL DECODERS - Application layer parsers
+# ====================================================================
+app-layer:
+  protocols:
+    # HTTP protocol settings
+    http:
+      enabled: yes
+      memcap: 64mb
+      
+    # FTP protocol
+    ftp:
+      enabled: yes
+      memcap: 64mb
+      
+    # TLS/SSL protocol
+    tls:
+      enabled: yes
+      detection-ports:
+        dp: 443
+      # JA3 fingerprinting
+      ja3-fingerprints: auto
+      
+    # DNS protocol
+    dns:
+      tcp:
+        enabled: yes
+        detection-ports:
+          dp: 53
+      udp:
+        enabled: yes
+        detection-ports:
+          dp: 53
+          
+    # SSH protocol
+    ssh:
+      enabled: yes
+      
+    # SMTP protocol
+    smtp:
+      enabled: yes
+      raw-extraction: no
+      mime:
+        decode-mime: yes
+        decode-base64: yes
+        decode-quoted-printable: yes
+        header-value-depth: 2000
+        extract-urls: yes
+        body-md5: no
+      inspected-tracker:
+        content-limit: 100000
+        content-inspect-min-size: 32768
+        content-inspect-window: 4096
+
+    # IMAP protocol
+    imap:
+      enabled: detection-only
+
+    # SMB protocol
+    smb:
+      enabled: yes
+      detection-ports:
+        dp: 139, 445
+        
+    # Modbus (industrial protocol)
+    modbus:
+      enabled: yes
+      detection-ports:
+        dp: 502
+        
+    # DNP3 (industrial protocol)
+    dnp3:
+      enabled: yes
+      detection-ports:
+        dp: 20000
+
+# ====================================================================
+# DEFRAGMENTATION - IP packet reassembly
+# ====================================================================
+defrag:
+  memcap: 32mb
+  hash-size: 65536
+  trackers: 65535
+  max-frags: 65535
+  prealloc: yes
+  timeout: 60
+
+# ====================================================================
+# FLOW SETTINGS - Connection tracking
+# ====================================================================
+flow:
+  memcap: 128mb
+  hash-size: 65536
+  prealloc: 10000
+  emergency-recovery: 30
+  managers: 1
+  recyclers: 1
+
+# ====================================================================
+# PERFORMANCE TUNING - Advanced settings
+# ====================================================================
+# Decoder events (protocol violations)
+decoder:
+  # Teredo tunneling
+  teredo:
+    enabled: true
+    ports: $TEREDO_PORTS
+    
+  # VXLAN tunneling
+  vxlan:
+    enabled: true
+    ports: $VXLAN_PORTS
+    
+  # GENEVE tunneling
+  geneve:
+    enabled: true
+    ports: $GENEVE_PORTS
+
+# ====================================================================
+# PROFILING - For performance analysis (disable in production)
+# ====================================================================
+profiling:
+  rules:
+    enabled: no
+    filename: rule_perf.log
+    append: yes
+    
+  keywords:
+    enabled: no
+    filename: keyword_perf.log
+    append: yes
+    
+  packets:
+    enabled: no
+    filename: packet_stats.log
+    append: yes
+    csv:
+      enabled: no
+      filename: packet_stats.csv
+
+# ====================================================================
+# COREDUMP - Enable core dumps for debugging
+# ====================================================================
+coredump:
+  max-dump: unlimited
+
+# ====================================================================
+# PLUGIN SUPPORT - Load external plugins
+# ====================================================================
+# plugins:
+#   - /path/to/plugin.so
+
+# ====================================================================
+# GENERAL SETTINGS
+# ====================================================================
+# Default log directory
+default-log-dir: /var/log/suricata/
+
+# Set the default rule action when threshold is exceeded
+# Options: pass, drop, reject, alert
+action-order:
+  - pass
+  - drop
+  - reject
+  - alert
+
+# PID file location
+pid-file: /var/run/suricata.pid
+
+# Daemon mode
+daemon: no
+
+# Unix command socket for control
+unix-command:
+  enabled: no
+  # filename: /var/run/suricata-command.socket
+
+# Magic file for file type detection
+magic-file: /usr/share/file/misc/magic.mgc
+
+# ====================================================================
+# END OF CONFIGURATION
+# ====================================================================
